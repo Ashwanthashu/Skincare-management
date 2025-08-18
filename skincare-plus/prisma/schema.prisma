@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String?
+  skinType       SkinType?
+  concerns       Concern[]
+  analyses       SkinAnalysis[]
+  appointments   Appointment[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model SkinAnalysis {
+  id             String     @id @default(cuid())
+  user           User       @relation(fields: [userId], references: [id])
+  userId         String
+  imageUrl       String?
+  notes          String?
+  detectedIssues Concern[]
+  scoreHydration Int?
+  scoreAcne      Int?
+  scoreTexture   Int?
+  createdAt      DateTime   @default(now())
+}
+
+model Concern {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?
+  users       User[]
+  analyses    SkinAnalysis[]
+  products    Product[]
+}
+
+model Product {
+  id             String             @id @default(cuid())
+  name           String
+  brand          String
+  priceCents     Int
+  currency       String             @default("USD")
+  productUrl     String
+  imageUrl       String?
+  retailer       String
+  suitableFor    Concern[]
+  ingredients    String?
+  ratingAverage  Float?             @default(0)
+  ratingCount    Int?               @default(0)
+  createdAt      DateTime           @default(now())
+
+  @@unique([name, brand], name: "name_brand")
+}
+
+model Appointment {
+  id             String     @id @default(cuid())
+  user           User       @relation(fields: [userId], references: [id])
+  userId         String
+  dermatologist  String
+  location       String
+  startTime      DateTime
+  endTime        DateTime
+  notes          String?
+  createdAt      DateTime   @default(now())
+}
+
+enum SkinType {
+  NORMAL
+  OILY
+  DRY
+  COMBINATION
+  SENSITIVE
+}
